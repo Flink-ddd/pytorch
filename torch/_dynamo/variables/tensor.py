@@ -1023,6 +1023,18 @@ class TensorVariable(VariableTracker):
                 ],
             )
 
+        if self.dtype is torch.bool:
+            int_tensor_var = self.call_method(
+                tx, "to", [variables.ConstantVariable.create(torch.int64)], {}
+            )
+            return int_tensor_var.call_method(tx, "item", args, kwargs)
+        proxy = tx.output.create_proxy(
+            "call_method", "item", *proxy_args_kwargs([self], {})
+        )
+        return SymNodeVariable.create(
+            tx, proxy, self.as_proxy().node.meta.get("example_value")
+        )
+
     def method___getitem__(self, *args, **kwargs):
         from ..symbolic_convert import InstructionTranslator
         from .builder import wrap_fx_proxy
